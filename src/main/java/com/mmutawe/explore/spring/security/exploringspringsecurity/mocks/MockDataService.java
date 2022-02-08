@@ -5,7 +5,7 @@ import com.mmutawe.explore.spring.security.exploringspringsecurity.models.Client
 import java.util.List;
 import java.util.UUID;
 
-public class ClientsMockData {
+public class MockDataService {
 
     public static final List<Client> CLIENTS;
 
