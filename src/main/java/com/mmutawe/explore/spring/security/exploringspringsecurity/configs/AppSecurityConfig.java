@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 import static com.mmutawe.explore.spring.security.exploringspringsecurity.enums.AppPermission.CLIENT_WRITE;
 import static com.mmutawe.explore.spring.security.exploringspringsecurity.enums.ClientRole.*;
@@ -35,7 +36,9 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
         // - The encrypted data will then be saved within the 'Authorization' field in the header
         // - Cons --> we can NOT logout (we will keep sending the username and password for each request)
         http
-                .csrf().disable()   // TODO: csrf will be replaced later on
+                .csrf().disable()   // Only use CSRF protection for any request that could be processed y browser (normal users)
+//                .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) // 'withHttpOnlyFalse' means that the cookie will be accessible to client side scripts (ex: Javascript)
+//                .and()
                 .authorizeHttpRequests()
                 .antMatchers("/").permitAll()
                 .antMatchers("/api/**").hasRole(MANAGER.name())
