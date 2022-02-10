@@ -1,6 +1,5 @@
 package com.mmutawe.explore.spring.security.exploringspringsecurity.configs;
 
-import com.mmutawe.explore.spring.security.exploringspringsecurity.enums.ClientRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,8 +12,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
-import static com.mmutawe.explore.spring.security.exploringspringsecurity.enums.ClientRole.MANAGER;
-import static com.mmutawe.explore.spring.security.exploringspringsecurity.enums.ClientRole.USER;
+import static com.mmutawe.explore.spring.security.exploringspringsecurity.enums.AppPermission.CLIENT_WRITE;
+import static com.mmutawe.explore.spring.security.exploringspringsecurity.enums.ClientRole.*;
+import static org.springframework.http.HttpMethod.*;
 
 @Configuration
 @EnableWebSecurity
@@ -34,9 +34,15 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
         // - the username and password will be combined and encoded using base64.
         // - The encrypted data will then be saved within the 'Authorization' field in the header
         // - Cons --> we can NOT logout (we will keep sending the username and password for each request)
-        http.authorizeHttpRequests()
+        http
+                .csrf().disable()   // TODO: csrf will be replaced later on
+                .authorizeHttpRequests()
                 .antMatchers("/").permitAll()
                 .antMatchers("/api/**").hasRole(MANAGER.name())
+                .antMatchers(POST, "/management/api/**").hasAnyAuthority(CLIENT_WRITE.getPermission())
+                .antMatchers(PUT, "/management/api/**").hasAnyAuthority(CLIENT_WRITE.getPermission())
+                .antMatchers(DELETE, "/management/api/**").hasAnyAuthority(CLIENT_WRITE.getPermission())
+                .antMatchers( GET,"/management/api/**").hasAnyRole(USER.name(), MANAGER_TRAINEE.name(),MANAGER.name(), ADMIN.name())
                 .anyRequest()
                 .authenticated()
                 .and()
@@ -52,17 +58,27 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
         UserDetails userInvoker = User.builder()
                 .username("Invoker")
                 .password(passwordEncoder.encode("pass"))
-                .roles(MANAGER.name())
+//                .roles(MANAGER.name())
+                .authorities(MANAGER.getGrantedAuthorities())
+                .build();
+
+        UserDetails userLina = User.builder()
+                .username("Lina")
+                .password(passwordEncoder.encode("pass"))
+//                .roles(MANAGER_TRAINEE.name()) // ROLE_MANAGER_TRAINEE
+                .authorities(MANAGER_TRAINEE.getGrantedAuthorities())
                 .build();
 
         UserDetails userMarci = User.builder()
                 .username("Marci")
                 .password(passwordEncoder.encode("pass"))
-                .roles(USER.name())
+//                .roles(USER.name())
+                .authorities(USER.getGrantedAuthorities())
                 .build();
 
         return new InMemoryUserDetailsManager(
                 userInvoker,
+                userLina,
                 userMarci
         );
     }
