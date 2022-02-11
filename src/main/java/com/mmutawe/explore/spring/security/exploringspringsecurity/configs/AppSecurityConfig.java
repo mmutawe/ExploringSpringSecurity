@@ -1,18 +1,15 @@
 package com.mmutawe.explore.spring.security.exploringspringsecurity.configs;
 
+import com.mmutawe.explore.spring.security.exploringspringsecurity.services.auths.ClientSecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.util.concurrent.TimeUnit;
 
@@ -26,9 +23,12 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final PasswordEncoder passwordEncoder;
 
+    private final ClientSecurityService clientSecurityService;
+
     @Autowired
-    public AppSecurityConfig(PasswordEncoder passwordEncoder) {
+    public AppSecurityConfig(PasswordEncoder passwordEncoder, ClientSecurityService clientSecurityService) {
         this.passwordEncoder = passwordEncoder;
+        this.clientSecurityService = clientSecurityService;
     }
 
     @Override
@@ -84,7 +84,8 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
                     .logoutSuccessUrl("/login");
     }
 
-    // Responsible for determine how we retrieve users from the database
+    /*
+    // Responsible for determine how we retrieve users-details (security class)
     @Bean
     @Override
     protected UserDetailsService userDetailsService() {
@@ -116,4 +117,21 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
                 userMarci
         );
     }
+    */
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(daoAuthenticationProvider());
+    }
+
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider(){
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setPasswordEncoder(passwordEncoder);
+        provider.setUserDetailsService(clientSecurityService);
+
+        return provider;
+    }
+
+
 }
